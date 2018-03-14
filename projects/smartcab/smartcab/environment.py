@@ -32,10 +32,10 @@ class Environment(object):
     valid_headings = [(1, 0), (0, -1), (-1, 0), (0, 1)]  # E, N, W, S
     hard_time_limit = -100  # Set a hard time limit even if deadline is not enforced.
 
-    def __init__(self, verbose=False, num_dummies=100, grid_size = (8, 6)):
+    def __init__(self, verbose=False, num_dummies=100, grid_size = (8, 6), render_console = False):
         self.num_dummies = num_dummies  # Number of dummy driver agents in the environment
         self.verbose = verbose # If debug output should be given
-
+        self.render_console = render_console
         # Initialize simulation variables
         self.done = False
         self.t = 0
@@ -95,7 +95,7 @@ class Environment(object):
         self.agent_states[agent] = {'location': random.choice(self.intersections.keys()), 'heading': (0, 1)}
         return agent
 
-    def set_primary_agent(self, agent, enforce_deadline=False):
+    def set_primary_agent(self, agent, enforce_deadline=True):
         """ When called, set_primary_agent sets 'agent' as the primary agent.
             The primary agent is the smartcab that is followed in the environment. """
 
@@ -179,12 +179,13 @@ class Environment(object):
     def step(self):
         """ This function is called when a time step is taken turing a trial. """
 
-        # Pretty print to terminal
-        print ""
-        print "/-------------------"
-        print "| Step {} Results".format(self.t)
-        print "\-------------------"
-        print ""
+        if self.render_console:
+            # Pretty print to terminal
+            print ""
+            print "/-------------------"
+            print "| Step {} Results".format(self.t)
+            print "\-------------------"
+            print ""
 
         if(self.verbose == True): # Debugging
             print "Environment.step(): t = {}".format(self.t)

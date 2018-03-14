@@ -34,7 +34,7 @@ class Simulator(object):
         'gray'    : (155, 155, 155)
     }
 
-    def __init__(self, env, size=None, update_delay=2.0, display=True, log_metrics=False, optimized=False):
+    def __init__(self, env, size=None, update_delay=0.001, display=False, log_metrics=True, optimized=True, render_console= False):
         self.env = env
         self.size = size if size is not None else ((self.env.grid_size[0] + 1) * self.env.block_size, (self.env.grid_size[1] + 2) * self.env.block_size)
         self.width, self.height = self.size
@@ -51,6 +51,8 @@ class Simulator(object):
         self.current_time = 0.0
         self.last_updated = 0.0
         self.update_delay = update_delay  # duration between each step (in seconds)
+
+        self.render_console= render_console
 
         self.display = display
         if self.display:
@@ -108,7 +110,7 @@ class Simulator(object):
             self.log_writer = csv.DictWriter(self.log_file, fieldnames=self.log_fields)
             self.log_writer.writeheader()
 
-    def run(self, tolerance=0.05, n_test=0):
+    def run(self, tolerance=0.005, n_test=100):
         """ Run a simulation of the environment. 
 
         'tolerance' is the minimum epsilon necessary to begin testing (if enabled)
@@ -183,7 +185,8 @@ class Simulator(object):
                         self.last_updated = self.current_time
                     
                     # Render text
-                    self.render_text(trial, testing)
+                    if self.render_console:
+                        self.render_text(trial, testing)
 
                     # Render GUI and sleep
                     if self.display:

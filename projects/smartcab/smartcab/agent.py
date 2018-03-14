@@ -8,7 +8,7 @@ class LearningAgent(Agent):
     """ An agent that learns to drive in the Smartcab world.
         This is the object you will be modifying. """ 
 
-    def __init__(self, env, learning=False, epsilon=1.0, alpha=0.5):
+    def __init__(self, env, learning=True, epsilon=1.0, alpha=0.005):
         super(LearningAgent, self).__init__(env)     # Set the agent in the evironment 
         self.planner = RoutePlanner(self.env, self)  # Create a route planner
         self.valid_actions = self.env.valid_actions  # The set of valid actions
@@ -23,6 +23,7 @@ class LearningAgent(Agent):
         ## TO DO ##
         ###########
         # Set any additional class parameters as needed
+        self.trial_number = 0
 
 
     def reset(self, destination=None, testing=False):
@@ -39,6 +40,46 @@ class LearningAgent(Agent):
         # Update epsilon using a decay function of your choice
         # Update additional class parameters as needed
         # If 'testing' is True, set epsilon and alpha to 0
+        if testing:
+            self.epsilon = 0.0
+            self.alpha = 0.0
+        else:
+            self.trial_number += 1
+            #epsilon decaying function
+            
+            #use slow decay for alpha
+            """
+            self.alpha = self.alpha  - 0.001
+            if self.alpha < 0.01:
+                self.alpha = 0.01
+            """
+            # self.epsilon = self.epsilon - 0.05 # linear decay - default learning
+            # self.epsilon = 1.0 / (float(self.trial_number) ** 2)
+            # self.epsilon = self.alpha ** float(self.trial_number)
+            
+            #exponential decay
+            #self.epsilon = math.e ** (-1 * self.alpha  * float(self.trial_number)) 
+            
+            #cosine decay
+            self.epsilon = ( math.cos( self.alpha * float(self.trial_number))) ## best result with epsilon=1.0, alpha=0.01, alpha constant
+            #self.epsilon = abs( math.cos( self.alpha * (float(self.trial_number) ** 1.0/2.0))) 
+            
+            #streched decaying function alternative
+            #self.epsilon = math.e ** (- (float(self.trial_number)** 3 ) *  self.alpha)
+
+            # decay function on 100 zero e ^(- x^(3 )  * 0.05^4) 
+            #self.epsilon =  math.e ** (-1 * (float(self.trial_number) ** 2) * (self.alpha ** 3))
+
+            #slow decay 
+            #self.epsilon = 1 - 0.5 * (( self.alpha * self.trial_number) ** 3)
+            #self.epsilon = 1 + (- self.alpha * self.trial_number) ** 3
+            
+            #logarithmic decay
+            #self.epsilon =  math.log(-1 * self.alpha * self.trial_number + 2 ,2 )
+            #self.epsilon = math.log( (-1 * (self.alpha * self.trial_number) + 4) *2 + 2,  2) /5.0 
+            #self.epsilon = (math.log(-1 *  self.alpha * self.trial_number  + 1, 2) * 3 + 10 ) / 10
+
+
 
         return None
 
@@ -62,7 +103,7 @@ class LearningAgent(Agent):
         # With the hand-engineered features, this learning process gets entirely negated.
         
         # Set 'state' as a tuple of relevant data for the agent        
-        state = None
+        state = (inputs['light'], waypoint, inputs['oncoming'], inputs['left'] )
 
         return state
 
@@ -75,8 +116,10 @@ class LearningAgent(Agent):
         ## TO DO ##
         ###########
         # Calculate the maximum Q-value of all actions for a given state
+        # 
 
-        maxQ = None
+        #simple dictionary maximum value
+        maxQ = max(self.Q[state].values())
 
         return maxQ 
 
@@ -90,6 +133,15 @@ class LearningAgent(Agent):
         # When learning, check if the 'state' is not in the Q-table
         # If it is not, create a new dictionary for that state
         #   Then, for each action available, set the initial Q-value to 0.0
+
+        if not self.learning:
+            return
+
+        initial_state = {None:0.0, 'forward':0.0, 'left':0.0, 'right':0.0 }
+
+        if state not in self.Q:
+            #Each state will have possible action outcomes after learning
+            self.Q[state] = initial_state 
 
         return
 
@@ -110,6 +162,35 @@ class LearningAgent(Agent):
         # When learning, choose a random action with 'epsilon' probability
         # Otherwise, choose an action with the highest Q-value for the current state
         # Be sure that when choosing an action with highest Q-value that you randomly select between actions that "tie".
+        # 
+        if not self.learning:
+            #choose random action from possible valid action list
+            action = random.choice(self.valid_actions)
+        else:
+            #Epsilon <1 so , epsilon * 100 will have the probability
+            #at beginning actions will be random
+            #Explaining for verbosity (could have better code)
+            #toss a number between 0 - 1
+            random_percent = random.random() # will be between 0-1   
+
+            if random_percent < (self.epsilon + 0.0005):
+                #our guessed random is smaller than epsilon, do a random action
+                #Epsilon should be <0 in trials so should not choose here on real test
+                action = random.choice(self.valid_actions)
+            else:
+                actions_possible = []
+                maxQ_of_this_state = self.get_maxQ(state)
+
+                for action_choice in self.Q[state]:
+                    if self.Q[state][action_choice]  == maxQ_of_this_state:
+                        actions_possible.append(action_choice)
+
+
+                #action table build, choose one randomly
+                action = random.choice(actions_possible)
+
+
+
         return action
 
 
@@ -123,6 +204,14 @@ class LearningAgent(Agent):
         ###########
         # When learning, implement the value iteration update rule
         #   Use only the learning rate 'alpha' (do not use the discount factor 'gamma')
+
+
+        
+
+        if self.learning:
+            #new_q = (1 - alpha) * old_q + alpha * learned_value 
+            old_q = self.Q[state][action]
+            self.Q[state][action] = (1 - self.alpha) * old_q + self.alpha  * reward 
 
         return
 
