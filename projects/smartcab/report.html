@@ -12155,7 +12155,7 @@ Run the agent.py file after setting the flags from projects/smartcab folder inst
 <li>Oncoming : None, right, left, forward (4)</li>
 <li><p>Left: None, right, left, forward (4)</p>
 </li>
-<li><p>For a better efficiency deadline should also be quantized and check but removing for now will reduce Q-Table.</p>
+<li><p>For a better efficiency deadline should also be included but including it will increase the state size, as say we quantized deadline to 20 values (0,5,10,... 100 of remaining time), 20 will be multiplied by total states so 96*20 states will be needed to be checked. Using lower quantized values may give some information but may not help much on the learning. Also without including deadline our safety checks are increased, with including it agent may choose to override some of the safety cautions to access deadline.</p>
 </li>
 </ul>
 <p>Total size of the table would be 2 x 3 x 4 x 4 = 96 states</p>
@@ -12560,7 +12560,109 @@ Moving left and right may be another option as still agent moves towards destina
 <td>None</td>
 <td>None</td>
 <td>MOVE FORWARD</td>
+<td>OPTIMAL     </td>
+</tr>
+</tbody>
+</table>
+<p>Another example is when the lights are RED.
+Even if there is no traffic a car should stop at Red light and it is the optimal policy, a suboptimal policy may be the case in countries where driving right in red light (there are additional lights for right turn on some places) is allowed.</p>
+<table>
+<thead><tr>
+<th></th>
+<th>inputs(Light)</th>
+<th>Waypoint</th>
+<th>inputs(Oncoming)</th>
+<th>inputs(Left)</th>
+<th>ACTION</th>
+<th>OPTIMAL POLICY</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Red</td>
+<td>Right</td>
+<td>None</td>
+<td>None</td>
+<td>STOP</td>
 <td>OPTIMAL</td>
+</tr>
+<tr>
+<td>Red</td>
+<td>Right</td>
+<td>None</td>
+<td>None</td>
+<td>MOVE RIGHT</td>
+<td>SUBOPTIMAL</td>
+</tr>
+<tr>
+<td>Red</td>
+<td>Right</td>
+<td>None</td>
+<td>None</td>
+<td>MOVE LEFT</td>
+<td>INCORRECT</td>
+<td></td>
+</tr>
+<tr>
+<td>Red</td>
+<td>Right</td>
+<td>None</td>
+<td>None</td>
+<td>MOVE FORWARD</td>
+<td>INCORRECT</td>
+</tr>
+</tbody>
+</table>
+<p>From the learned state table actions for the agent are below for above case:</p>
+<p>('red', 'right', None, None)
+ forward : -3.54
+ None : 0.21
+ right : 0.86
+ left : -3.24</p>
+<p>Here we can see even optimal policy should be STOP (None) , car has Right action as the maximum value. So with the environment given car chose to move in the red light if there is no traffic. Situation here may be agent never had any accident and was fine with red light penalty.</p>
+<p>For the case of red light with no traffic and forward waypoint. Our agent succesfully learned to stop at red light (likely penalized due to accidents before), the optimal policy.</p>
+<table>
+<thead><tr>
+<th>inputs(Light)</th>
+<th>Waypoint</th>
+<th>inputs(Oncoming)</th>
+<th>inputs(Left)</th>
+<th>ACTION</th>
+<th>AGENT VALUES</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Red</td>
+<td>Forward</td>
+<td>None</td>
+<td>None</td>
+<td>STOP</td>
+<td>1.14</td>
+</tr>
+<tr>
+<td>Red</td>
+<td>Forward</td>
+<td>None</td>
+<td>None</td>
+<td>MOVE RIGHT</td>
+<td>0.15</td>
+</tr>
+<tr>
+<td>Red</td>
+<td>Forward</td>
+<td>None</td>
+<td>None</td>
+<td>MOVE LEFT</td>
+<td>-3.73</td>
+</tr>
+<tr>
+<td>Red</td>
+<td>Forward</td>
+<td>None</td>
+<td>None</td>
+<td>MOVE FORWARD</td>
+<td>-3.27</td>
 </tr>
 </tbody>
 </table>
@@ -12707,7 +12809,54 @@ Moving left and right may be another option as still agent moves towards destina
 </table>
 <p>Light is red so agent must stop for Optimal policy, still in this sate maximum value is moving Right.
 Clearly agent is making a traffic violation yet possible accident is low as agent moves right unlikely to crash.
-The reason agent chose this as training result may be since all input states have same weights Light is not prioritized. If light had bigger weight this would make agent behave better</p>
+The reason agent chose this as training result may be since all input states have same weights Light is not prioritized. If light had bigger weight this would make agent behave better.</p>
+<p>Another case is light is read, waypoint is right and not traffic:</p>
+<table>
+<thead><tr>
+<th>inputs(Light)</th>
+<th>Waypoint</th>
+<th>inputs(Oncoming)</th>
+<th>inputs(Left)</th>
+<th>ACTION</th>
+<th>AGENT VALUES</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Red</td>
+<td>Right</td>
+<td>None</td>
+<td>None</td>
+<td>STOP</td>
+<td>0.21</td>
+</tr>
+<tr>
+<td>Red</td>
+<td>Right</td>
+<td>None</td>
+<td>None</td>
+<td>MOVE RIGHT</td>
+<td>0.86</td>
+</tr>
+<tr>
+<td>Red</td>
+<td>Right</td>
+<td>None</td>
+<td>None</td>
+<td>MOVE LEFT</td>
+<td>-3.24</td>
+</tr>
+<tr>
+<td>Red</td>
+<td>Right</td>
+<td>None</td>
+<td>None</td>
+<td>MOVE FORWARD</td>
+<td>-3.54</td>
+</tr>
+</tbody>
+</table>
+<p>Here we can see even optimal policy should be STOP (None) , car has Right action as the maximum value. So with the environment given car chose to move in the red light if there is no traffic. Situation here may be agent never had any accident and was fine with red light penalty.</p>
 
 </div>
 </div>
