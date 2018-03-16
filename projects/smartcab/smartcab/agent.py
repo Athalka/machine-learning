@@ -8,7 +8,7 @@ class LearningAgent(Agent):
     """ An agent that learns to drive in the Smartcab world.
         This is the object you will be modifying. """ 
 
-    def __init__(self, env, learning=True, epsilon=1.0, alpha=0.005):
+    def __init__(self, env, learning=True, epsilon=1.0, alpha=0.01):
         super(LearningAgent, self).__init__(env)     # Set the agent in the evironment 
         self.planner = RoutePlanner(self.env, self)  # Create a route planner
         self.valid_actions = self.env.valid_actions  # The set of valid actions
@@ -103,7 +103,10 @@ class LearningAgent(Agent):
         # With the hand-engineered features, this learning process gets entirely negated.
         
         # Set 'state' as a tuple of relevant data for the agent        
-        state = (inputs['light'], waypoint, inputs['oncoming'], inputs['left'] )
+        #state = (inputs['light'], waypoint, inputs['oncoming'], inputs['left'] , inputs['right'] )
+        
+        #US traffic laws make right unnecessary as you can turn right on red light if no traffic!
+        state = (inputs['light'], waypoint, inputs['oncoming'], inputs['left'])
 
         return state
 
@@ -178,16 +181,12 @@ class LearningAgent(Agent):
                 #Epsilon should be <0 in trials so should not choose here on real test
                 action = random.choice(self.valid_actions)
             else:
-                actions_possible = []
+
                 maxQ_of_this_state = self.get_maxQ(state)
-
-                for action_choice in self.Q[state]:
-                    if self.Q[state][action_choice]  == maxQ_of_this_state:
-                        actions_possible.append(action_choice)
-
+                actions = [act for act, val in self.Q[state].items() if val == maxQ_of_this_state]
 
                 #action table build, choose one randomly
-                action = random.choice(actions_possible)
+                action = random.choice(actions)
 
 
 
