@@ -1,13 +1,13 @@
-# machine-learning
+# Udacity Machine Kearning Engineer Nanodegree
 Content for Student submission of Udacity's Machine Learning Nanonegree curriculum.
 
 Capstone Project: Predicting stock prices in Turkish Stock Market
+https://github.com/gorkemgoknar/machine-learning/tree/master/projects/capstone
+
 
 Dog classifier can be found at : https://github.com/Athalka/dog-app-udacity
 
 Certificate: https://confirm.udacity.com/HWRKFLRH
-
-
 
 
 
