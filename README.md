@@ -1,4 +1,4 @@
-# Udacity Machine Kearning Engineer Nanodegree
+# Udacity Machine Learning Engineer Nanodegree
 Content for Student submission of Udacity's Machine Learning Nanonegree curriculum.
 
 Capstone Project: Predicting stock prices in Turkish Stock Market
